@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login & Home — Uji Kaji VPS</title>
+  <style>
+    :root {
+      --bg: #07080c;
+      --card: #0e1017;
+      --border: #1e2436;
+      --accent-red: #b91c1c;
+      --accent-red-bright: #ef4444;
+      --accent-blue: #2563eb;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --ok: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(to right, rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(185, 28, 28, 0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .box {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      border: 1px solid rgba(185, 28, 28, 0.45);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .status-dot {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .status-dot.connected {
+      color: var(--ok);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      margin-bottom: 14px;
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent-red-bright);
+    }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--accent-red), #7f1d1d);
+      color: #fff;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-secondary {
+      margin-top: 10px;
+      background: #141926;
+      border: 1px solid rgba(37, 99, 235, 0.45);
+    }
+
+    .msg {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+      color: #f87171;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .home-card {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #090b10;
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <!-- HALAMAN LOGIN -->
+  <div id="login-view" class="box">
+    <div class="top-bar">
+      <span>MYNZXI TEST PORTAL</span>
+      <span id="vps-status" class="status-dot">Menyemak VPS...</span>
+    </div>
+    <h1>Log Masuk</h1>
+    <p class="sub">Masukkan nama dan password akaun untuk masuk ke Home.</p>
+
+    <form id="login-form">
+      <label for="nama">Nama</label>
+      <input id="nama" type="text" placeholder="Contoh: reyyV" autocomplete="username" required />
+
+      <label for="pass">Password</label>
+      <input id="pass" type="password" placeholder="Masukkan password" autocomplete="current-password" required />
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p id="login-msg" class="msg"></p>
+  </div>
+
+  <!-- HALAMAN HOME RINGKAS -->
+  <div id="home-view" class="box hidden">
+    <div class="top-bar">
+      <span>HOME — UJI KAJI</span>
+      <span id="vps-status-home" class="status-dot connected">VPS Tersambung</span>
+    </div>
+    <h1>Selamat Datang</h1>
+    <p class="sub">Login berjaya dan sambungan ke script VPS aktif.</p>
+
+    <div class="home-card">
+      <div><strong>Pengguna:</strong> <span id="user-nama">-</span></div>
+      <div><strong>Status Akses:</strong> <span id="user-akses">-</span></div>
+      <div><strong>Alamat VPS:</strong> <span id="vps-url-text">-</span></div>
+    </div>
+
+    <button id="logout-btn" class="btn-secondary" type="button">Log Keluar</button>
+  </div>
+
+  <script>
+    // 🔴 TUKAR URL + PORT VPS ANDA DI SINI (contoh: http://mynzxi.miuntech.my.id:2001)
+    const URL_VPS = "http://mynzxi.miuntech.my.id:2003";
+
+    const loginView = document.getElementById("login-view");
+    const homeView = document.getElementById("home-view");
+    const loginForm = document.getElementById("login-form");
+    const loginMsg = document.getElementById("login-msg");
+    const vpsStatus = document.getElementById("vps-status");
+    const vpsUrlText = document.getElementById("vps-url-text");
+
+    vpsUrlText.textContent = URL_VPS;
+
+    // 1. Semak sambungan VPS & hantar info pengguna/peranti baru ke Telegram bot
+    async function initConnectionAndNotify() {
+      try {
+        const resData = await fetch(`${URL_VPS}/api/data`);
+        if (resData.ok) {
+          vpsStatus.textContent = "VPS Tersambung";
+          vpsStatus.classList.add("connected");
+        }
+      } catch (e) {
+        vpsStatus.textContent = "VPS Tidak Tercapai";
+      }
+
+      try {
+        await fetch(`${URL_VPS}/api/visitor`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            page: window.location.pathname || "/login",
+            device: navigator.userAgent,
+            platform: navigator.platform || "Unknown",
+            screen: `${window.screen.width}x${window.screen.height}`
+          })
+        });
+      } catch (e) {
+        // Abaikan jika gagal hubungi server
+      }
+    }
+
+    // 2. Proses login (semak nama & pass di VPS)
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginMsg.textContent = "Sedang menyemak...";
+
+      const nama = document.getElementById("nama").value.trim();
+      const pass = document.getElementById("pass").value.trim();
+
+      try {
+        const res = await fetch(`${URL_VPS}/api/login-vvip`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama, pass })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          loginMsg.textContent = "";
+          document.getElementById("user-nama").textContent = data.nama;
+          document.getElementById("user-akses").textContent = data.akses || "VVIP Akses";
+          loginView.classList.add("hidden");
+          homeView.classList.remove("hidden");
+        } else {
+          loginMsg.textContent = "salah pass dan nama";
+        }
+      } catch (err) {
+        loginMsg.textContent = "salah pass dan nama";
+      }
+    });
+
+    // 3. Kembali ke halaman login
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      document.getElementById("pass").value = "";
+      loginMsg.textContent = "";
+      homeView.classList.add("hidden");
+      loginView.classList.remove("hidden");
+    });
+
+    initConnectionAndNotify();
+  </script>
+</body>
+</html>
